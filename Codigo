@@ -1,0 +1,41 @@
+from scipy.optimize import curve_fit
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+# Funciones teóricas
+def P_top_model(f, alpha):
+    return 1/2 * np.exp(-alpha * f) / (np.exp(-alpha * f) + 2 * f * np.exp(-alpha))
+
+def P_side_model(f, alpha):
+    return 1/2 * (f * np.exp(-alpha)) / (np.exp(-alpha * f) + 2 * f * np.exp(-alpha))
+
+# Datos experimentales
+f_exp = np.array([1, 0.75, 0.5, 0.25, 0])
+p_top_exp = np.array([0.16, 0.28, 0.37, 0.43, 0.50])
+p_top_err = np.array([0.03, 0.04, 0.04, 0.01, 0.06])
+p_sides_exp = np.array([0.17, 0.11, 0.07, 0.04, 0.00])
+p_sides_err = np.array([0.04, 0.03, 0.02, 0.01, 0.00])
+
+# Evita errores cero
+p_sides_err = np.clip(p_sides_err, 1e-3, None)
+
+# Concatenar datos
+f_combined = np.concatenate([f_exp, f_exp])
+p_combined = np.concatenate([p_top_exp, p_sides_exp])
+sigma_combined = np.concatenate([p_top_err, p_sides_err])
+
+# Ajuste ponderado con valor inicial
+popt, pcov = curve_fit(
+    combined_model,
+    f_combined,
+    p_combined,
+    sigma=sigma_combined,
+    absolute_sigma=True,
+    p0=[1.0]
+)
+
+alpha_fit = popt[0]
+alpha_err = np.sqrt(np.diag(pcov))[0]
+
+print(f"α óptimo: {alpha_fit:.1f} ± {alpha_err:.1f}")
